@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soulshine Blogs</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #c44d4d;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #new-post {
+            margin-top: 20px;
+        }
+
+        #new-post h2 {
+            margin-bottom: 10px;
+        }
+
+        #post-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #post-form input{
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #post-form textarea {
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+            height: 200px;
+        }
+
+        #post-form button {
+            padding: 10px;
+            background-color:  #c44d4d;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .blog-post {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(102, 64, 64, 0.1);
+        }
+
+        .blog-post h3 {
+            margin-top: 0;
+        }
+
+        .blog-post p {
+            margin-bottom: 10px;
+        }
+        .blog-post .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .blog-post .actions .like {
+            display: flex;
+            align-items: center;
+        }
+
+        .blog-post .actions .like button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 23px;
+            color: #ff6347;
+            margin-right: 5px;
+        }
+
+        .blog-post .actions .like span {
+            font-size: 18px;
+        }
+
+        .blog-post button {
+            padding: 5px 10px;
+            background-color: #ff6347;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Soulshine Blogs</h1>
+    </header>
+    <main>
+        <section id="new-post">
+            <h2 id="form-heading">Create a New Post</h2>
+            <form id="post-form">
+                <input type="text" id="title" placeholder="Post Title" required>
+                <textarea id="content" placeholder="Post Content" required></textarea>
+                <button type="submit">Add Post</button>
+            </form>
+        </section>
+        <section id="blog-posts">
+            <!-- Blog posts will be dynamically added here -->
+        </section>
+        
+        
+    </main>
+    <script>
+        // Get elements from the DOM
+        const postForm = document.getElementById('post-form');
+        const titleInput = document.getElementById('title');
+        const contentInput = document.getElementById('content');
+        const blogPostsSection = document.getElementById('blog-posts');
+        const formHeading = document.getElementById('form-heading');
+        
+        // Array to store blog posts
+        let posts = [];
+        let isEditing = false; // Flag to track if we are editing a post
+        let editingIndex = -1; // Index of the post being edited
+        
+        // Function to render the blog posts
+        function renderPosts() {
+            blogPostsSection.innerHTML = '';
+            posts.forEach((post, index) => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('blog-post');
+                postElement.innerHTML = `
+                    <div class="content">
+                        <h3>${post.title}</h3>
+                        <p>${post.content}</p>
+                    </div>
+                    <div class="actions">
+                        <div class="like">
+                            <button onclick="likePost(${index})">&#9829;</button>
+                            <span id="like-count-${index}">${post.likes || 0}</span>
+                        </div>
+                        <div>
+                            <button onclick="editPost(${index})">Edit</button>
+                            <button onclick="deletePost(${index})">Delete</button>
+                        </div>
+                    </div>
+                `;
+                blogPostsSection.appendChild(postElement);
+            });
+        }
+        
+        // Function to handle form submission (either create or update)
+        postForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const title = titleInput.value;
+            const content = contentInput.value;
+        
+            if (isEditing) {
+                // Update the existing post
+                posts[editingIndex] = { title, content, likes: posts[editingIndex].likes || 0 };
+                resetForm(); // Reset form after editing
+            } else {
+                // Add a new post
+                posts.push({ title, content, likes: 0 });
+            }
+        
+            // Clear the input fields
+            titleInput.value = '';
+            contentInput.value = '';
+        
+            // Re-render the posts
+            renderPosts();
+        });
+        
+        // Function to delete a post
+        function deletePost(index) {
+            // Check if the post being deleted is the one being edited
+            if (isEditing && editingIndex === index) {
+                resetForm(); // Reset form if the post being edited is deleted
+            }
+        
+            // Adjust the editing index if necessary
+            if (editingIndex > index) {
+                editingIndex--; // Update the editing index if a previous post is deleted
+            }
+        
+            posts.splice(index, 1); // Delete the post
+            renderPosts(); // Re-render the posts
+        }
+        
+        // Function to edit a post
+        function editPost(index) {
+            const post = posts[index];
+            titleInput.value = post.title;
+            contentInput.value = post.content;
+        
+            isEditing = true; // Set the editing flag
+            editingIndex = index; // Store the index of the post being edited
+            postForm.querySelector('button[type="submit"]').textContent = 'Update Post'; // Change button text to 'Update Post'
+            formHeading.textContent = 'Edit Post'; // Change heading to 'Edit Post'
+        }
+        
+        // Function to reset the form after editing or deleting
+        function resetForm() {
+            isEditing = false; // Reset the editing flag
+            editingIndex = -1; // Reset the index
+            titleInput.value = ''; // Clear title input
+            contentInput.value = ''; // Clear content input
+            postForm.querySelector('button[type="submit"]').textContent = 'Add Post'; // Change button text back to 'Add Post'
+            formHeading.textContent = 'Create a New Post'; // Change heading back to 'Create a New Post'
+        }
+
+        // Function to like a post
+        function likePost(index) {
+            posts[index].likes = (posts[index].likes || 0) + 1;
+            renderPosts();
+        }
+    </script>
+</body>
+</html>
